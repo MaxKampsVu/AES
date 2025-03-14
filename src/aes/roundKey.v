@@ -1,0 +1,324 @@
+/* Computes the round key for round from key_in */
+
+module roundKey(
+    input  wire [3:0] round,
+    input  wire [127:0] key_in, // The initial key 
+    output reg [127:0]  key_out // The resulting round key 
+);
+
+integer i, c;
+
+reg [31:0] col_rot;
+reg [31:0] col_sbox;
+reg [31:0] col_rcon;
+reg [31:0] col_add;
+
+reg [31:0] tmp1;
+reg [31:0] tmp2;
+reg [31:0] tmp3;
+
+always @ * begin 
+    if (round > 0 && round < 11) begin 
+        //Rotate the first column
+        col_rot = {key_in[16 +:8], key_in[8 +:8], key_in[0 +:8], key_in[24 +:8]};
+        //Lookup elements of the rotated column in sBox
+        for (i = 0; i < 32; i = i + 8) begin 
+            LOOKUP_BYTE(col_rot[i +: 8], col_sbox[i +:8]);
+        end
+
+        RCON_32(col_sbox, col_add, round); 
+        
+        tmp1 = key_in[96 +: 32] ^ col_add[31:0];
+        key_out[96 +: 32] = tmp1[31:0];
+
+        tmp2 = key_in[64 +: 32] ^ tmp1[31:0];
+        key_out[64 +: 32] = tmp2[31:0];
+
+        tmp3 = key_in[32 +: 32] ^ tmp2[31:0];
+        key_out[32 +: 32] = tmp3[31:0];
+        
+        key_out[0 +: 32] = key_in[0 +: 32] ^ tmp3[31:0];
+    end
+    else begin 
+        key_out = key_in;
+    end 
+end 
+
+
+task RCON_32(input [31:0] key_in, output [31:0] key_out, input [3:0] round);
+    case (round)
+        4'd1 : key_out[31:0] = {(key_in[31:24] ^ 8'h1), key_in[23:0]};
+        4'd2 : key_out[31:0] = {(key_in[31:24] ^ 8'h2), key_in[23:0]};
+        4'd3 : key_out[31:0] = {(key_in[31:24] ^ 8'h4), key_in[23:0]};
+        4'd4 : key_out[31:0] = {(key_in[31:24] ^ 8'h8), key_in[23:0]};
+        4'd5 : key_out[31:0] = {(key_in[31:24] ^ 8'h10), key_in[23:0]};
+        4'd6 : key_out[31:0] = {(key_in[31:24] ^ 8'h20), key_in[23:0]};
+        4'd7 : key_out[31:0] = {(key_in[31:24] ^ 8'h40), key_in[23:0]};
+        4'd8 : key_out[31:0] = {(key_in[31:24] ^ 8'h80), key_in[23:0]};
+        4'd9 : key_out[31:0] = {(key_in[31:24] ^ 8'h1b), key_in[23:0]};
+        4'd10 : key_out[31:0] = {(key_in[31:24] ^ 8'h36), key_in[23:0]};
+    endcase
+endtask
+
+task LOOKUP_BYTE(input [7:0] text_in, output [7:0] text_out);
+    case (text_in)
+        8'h0 : text_out = 'h63;
+        8'h1 : text_out = 'h7c;
+        8'h2 : text_out = 'h77;
+        8'h3 : text_out = 'h7b;
+        8'h4 : text_out = 'hf2;
+        8'h5 : text_out = 'h6b;
+        8'h6 : text_out = 'h6f;
+        8'h7 : text_out = 'hc5;
+        8'h8 : text_out = 'h30;
+        8'h9 : text_out = 'h01;
+        8'ha : text_out = 'h67;
+        8'hb : text_out = 'h2b;
+        8'hc : text_out = 'hfe;
+        8'hd : text_out = 'hd7;
+        8'he : text_out = 'hab;
+        8'hf : text_out = 'h76;
+        8'h10 : text_out = 'hca;
+        8'h11 : text_out = 'h82;
+        8'h12 : text_out = 'hc9;
+        8'h13 : text_out = 'h7d;
+        8'h14 : text_out = 'hfa;
+        8'h15 : text_out = 'h59;
+        8'h16 : text_out = 'h47;
+        8'h17 : text_out = 'hf0;
+        8'h18 : text_out = 'had;
+        8'h19 : text_out = 'hd4;
+        8'h1a : text_out = 'ha2;
+        8'h1b : text_out = 'haf;
+        8'h1c : text_out = 'h9c;
+        8'h1d : text_out = 'ha4;
+        8'h1e : text_out = 'h72;
+        8'h1f : text_out = 'hc0;
+        8'h20 : text_out = 'hb7;
+        8'h21 : text_out = 'hfd;
+        8'h22 : text_out = 'h93;
+        8'h23 : text_out = 'h26;
+        8'h24 : text_out = 'h36;
+        8'h25 : text_out = 'h3f;
+        8'h26 : text_out = 'hf7;
+        8'h27 : text_out = 'hcc;
+        8'h28 : text_out = 'h34;
+        8'h29 : text_out = 'ha5;
+        8'h2a : text_out = 'he5;
+        8'h2b : text_out = 'hf1;
+        8'h2c : text_out = 'h71;
+        8'h2d : text_out = 'hd8;
+        8'h2e : text_out = 'h31;
+        8'h2f : text_out = 'h15;
+        8'h30 : text_out = 'h04;
+        8'h31 : text_out = 'hc7;
+        8'h32 : text_out = 'h23;
+        8'h33 : text_out = 'hc3;
+        8'h34 : text_out = 'h18;
+        8'h35 : text_out = 'h96;
+        8'h36 : text_out = 'h05;
+        8'h37 : text_out = 'h9a;
+        8'h38 : text_out = 'h07;
+        8'h39 : text_out = 'h12;
+        8'h3a : text_out = 'h80;
+        8'h3b : text_out = 'he2;
+        8'h3c : text_out = 'heb;
+        8'h3d : text_out = 'h27;
+        8'h3e : text_out = 'hb2;
+        8'h3f : text_out = 'h75;
+        8'h40 : text_out = 'h09;
+        8'h41 : text_out = 'h83;
+        8'h42 : text_out = 'h2c;
+        8'h43 : text_out = 'h1a;
+        8'h44 : text_out = 'h1b;
+        8'h45 : text_out = 'h6e;
+        8'h46 : text_out = 'h5a;
+        8'h47 : text_out = 'ha0;
+        8'h48 : text_out = 'h52;
+        8'h49 : text_out = 'h3b;
+        8'h4a : text_out = 'hd6;
+        8'h4b : text_out = 'hb3;
+        8'h4c : text_out = 'h29;
+        8'h4d : text_out = 'he3;
+        8'h4e : text_out = 'h2f;
+        8'h4f : text_out = 'h84;
+        8'h50 : text_out = 'h53;
+        8'h51 : text_out = 'hd1;
+        8'h52 : text_out = 'h00;
+        8'h53 : text_out = 'hed;
+        8'h54 : text_out = 'h20;
+        8'h55 : text_out = 'hfc;
+        8'h56 : text_out = 'hb1;
+        8'h57 : text_out = 'h5b;
+        8'h58 : text_out = 'h6a;
+        8'h59 : text_out = 'hcb;
+        8'h5a : text_out = 'hbe;
+        8'h5b : text_out = 'h39;
+        8'h5c : text_out = 'h4a;
+        8'h5d : text_out = 'h4c;
+        8'h5e : text_out = 'h58;
+        8'h5f : text_out = 'hcf;
+        8'h60 : text_out = 'hd0;
+        8'h61 : text_out = 'hef;
+        8'h62 : text_out = 'haa;
+        8'h63 : text_out = 'hfb;
+        8'h64 : text_out = 'h43;
+        8'h65 : text_out = 'h4d;
+        8'h66 : text_out = 'h33;
+        8'h67 : text_out = 'h85;
+        8'h68 : text_out = 'h45;
+        8'h69 : text_out = 'hf9;
+        8'h6a : text_out = 'h02;
+        8'h6b : text_out = 'h7f;
+        8'h6c : text_out = 'h50;
+        8'h6d : text_out = 'h3c;
+        8'h6e : text_out = 'h9f;
+        8'h6f : text_out = 'ha8;
+        8'h70 : text_out = 'h51;
+        8'h71 : text_out = 'ha3;
+        8'h72 : text_out = 'h40;
+        8'h73 : text_out = 'h8f;
+        8'h74 : text_out = 'h92;
+        8'h75 : text_out = 'h9d;
+        8'h76 : text_out = 'h38;
+        8'h77 : text_out = 'hf5;
+        8'h78 : text_out = 'hbc;
+        8'h79 : text_out = 'hb6;
+        8'h7a : text_out = 'hda;
+        8'h7b : text_out = 'h21;
+        8'h7c : text_out = 'h10;
+        8'h7d : text_out = 'hff;
+        8'h7e : text_out = 'hf3;
+        8'h7f : text_out = 'hd2;
+        8'h80 : text_out = 'hcd;
+        8'h81 : text_out = 'h0c;
+        8'h82 : text_out = 'h13;
+        8'h83 : text_out = 'hec;
+        8'h84 : text_out = 'h5f;
+        8'h85 : text_out = 'h97;
+        8'h86 : text_out = 'h44;
+        8'h87 : text_out = 'h17;
+        8'h88 : text_out = 'hc4;
+        8'h89 : text_out = 'ha7;
+        8'h8a : text_out = 'h7e;
+        8'h8b : text_out = 'h3d;
+        8'h8c : text_out = 'h64;
+        8'h8d : text_out = 'h5d;
+        8'h8e : text_out = 'h19;
+        8'h8f : text_out = 'h73;
+        8'h90 : text_out = 'h60;
+        8'h91 : text_out = 'h81;
+        8'h92 : text_out = 'h4f;
+        8'h93 : text_out = 'hdc;
+        8'h94 : text_out = 'h22;
+        8'h95 : text_out = 'h2a;
+        8'h96 : text_out = 'h90;
+        8'h97 : text_out = 'h88;
+        8'h98 : text_out = 'h46;
+        8'h99 : text_out = 'hee;
+        8'h9a : text_out = 'hb8;
+        8'h9b : text_out = 'h14;
+        8'h9c : text_out = 'hde;
+        8'h9d : text_out = 'h5e;
+        8'h9e : text_out = 'h0b;
+        8'h9f : text_out = 'hdb;
+        8'ha0 : text_out = 'he0;
+        8'ha1 : text_out = 'h32;
+        8'ha2 : text_out = 'h3a;
+        8'ha3 : text_out = 'h0a;
+        8'ha4 : text_out = 'h49;
+        8'ha5 : text_out = 'h06;
+        8'ha6 : text_out = 'h24;
+        8'ha7 : text_out = 'h5c;
+        8'ha8 : text_out = 'hc2;
+        8'ha9 : text_out = 'hd3;
+        8'haa : text_out = 'hac;
+        8'hab : text_out = 'h62;
+        8'hac : text_out = 'h91;
+        8'had : text_out = 'h95;
+        8'hae : text_out = 'he4;
+        8'haf : text_out = 'h79;
+        8'hb0 : text_out = 'he7;
+        8'hb1 : text_out = 'hc8;
+        8'hb2 : text_out = 'h37;
+        8'hb3 : text_out = 'h6d;
+        8'hb4 : text_out = 'h8d;
+        8'hb5 : text_out = 'hd5;
+        8'hb6 : text_out = 'h4e;
+        8'hb7 : text_out = 'ha9;
+        8'hb8 : text_out = 'h6c;
+        8'hb9 : text_out = 'h56;
+        8'hba : text_out = 'hf4;
+        8'hbb : text_out = 'hea;
+        8'hbc : text_out = 'h65;
+        8'hbd : text_out = 'h7a;
+        8'hbe : text_out = 'hae;
+        8'hbf : text_out = 'h08;
+        8'hc0 : text_out = 'hba;
+        8'hc1 : text_out = 'h78;
+        8'hc2 : text_out = 'h25;
+        8'hc3 : text_out = 'h2e;
+        8'hc4 : text_out = 'h1c;
+        8'hc5 : text_out = 'ha6;
+        8'hc6 : text_out = 'hb4;
+        8'hc7 : text_out = 'hc6;
+        8'hc8 : text_out = 'he8;
+        8'hc9 : text_out = 'hdd;
+        8'hca : text_out = 'h74;
+        8'hcb : text_out = 'h1f;
+        8'hcc : text_out = 'h4b;
+        8'hcd : text_out = 'hbd;
+        8'hce : text_out = 'h8b;
+        8'hcf : text_out = 'h8a;
+        8'hd0 : text_out = 'h70;
+        8'hd1 : text_out = 'h3e;
+        8'hd2 : text_out = 'hb5;
+        8'hd3 : text_out = 'h66;
+        8'hd4 : text_out = 'h48;
+        8'hd5 : text_out = 'h03;
+        8'hd6 : text_out = 'hf6;
+        8'hd7 : text_out = 'h0e;
+        8'hd8 : text_out = 'h61;
+        8'hd9 : text_out = 'h35;
+        8'hda : text_out = 'h57;
+        8'hdb : text_out = 'hb9;
+        8'hdc : text_out = 'h86;
+        8'hdd : text_out = 'hc1;
+        8'hde : text_out = 'h1d;
+        8'hdf : text_out = 'h9e;
+        8'he0 : text_out = 'he1;
+        8'he1 : text_out = 'hf8;
+        8'he2 : text_out = 'h98;
+        8'he3 : text_out = 'h11;
+        8'he4 : text_out = 'h69;
+        8'he5 : text_out = 'hd9;
+        8'he6 : text_out = 'h8e;
+        8'he7 : text_out = 'h94;
+        8'he8 : text_out = 'h9b;
+        8'he9 : text_out = 'h1e;
+        8'hea : text_out = 'h87;
+        8'heb : text_out = 'he9;
+        8'hec : text_out = 'hce;
+        8'hed : text_out = 'h55;
+        8'hee : text_out = 'h28;
+        8'hef : text_out = 'hdf;
+        8'hf0 : text_out = 'h8c;
+        8'hf1 : text_out = 'ha1;
+        8'hf2 : text_out = 'h89;
+        8'hf3 : text_out = 'h0d;
+        8'hf4 : text_out = 'hbf;
+        8'hf5 : text_out = 'he6;
+        8'hf6 : text_out = 'h42;
+        8'hf7 : text_out = 'h68;
+        8'hf8 : text_out = 'h41;
+        8'hf9 : text_out = 'h99;
+        8'hfa : text_out = 'h2d;
+        8'hfb : text_out = 'h0f;
+        8'hfc : text_out = 'hb0;
+        8'hfd : text_out = 'h54;
+        8'hfe : text_out = 'hbb;
+        8'hff : text_out = 'h16;
+    endcase
+endtask
+
+endmodule

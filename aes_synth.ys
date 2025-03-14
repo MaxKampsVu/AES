@@ -1,0 +1,13 @@
+# Read the design files
+read_verilog src/aes/addRoundKey.v src/aes/aes.v src/aes/counter.v src/aes/mixColumns.v src/aes/roundKey.v src/aes/shiftRows.v src/aes/subBytes.v
+
+# Generic synthesis
+synth -top aes
+
+# Map to Nangate45 standard cell library
+dfflibmap -liberty /Users/maximiliankamps/Downloads/OpenROAD-flow-scripts-master/flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib
+abc -liberty /Users/maximiliankamps/Downloads/OpenROAD-flow-scripts-master/flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib
+
+# Report area
+stat
+write_verilog aes_synth.v
