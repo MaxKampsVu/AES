@@ -1,15 +1,15 @@
 # AES Hardware Implementation
 
-This project contains a hardware implementation of the AES encryption algorithm, including both a standard design and a side-channel resistant masked S-box version.
+This project contains a hardware implementation of the AES encryption algorithm, including both a standard design and a protected S-box variant.
 
 ## 🔐 Project Overview
 
-- **Standard AES Implementation**: Located in `src/aes/`, this includes all AES core modules and a testbench for simulation and area analysis.
-- **Masked S-box Implementation**: Found in `src/masked_sbox/`, this design protects against Differential Power Analysis (DPA) and Correlation Power Analysis (CPA) using 8-share boolean masking.
+- **Standard AES Implementation**: Includes all core AES modules along with simulation and synthesis details.
+- **Masked S-box Implementation**: Uses 8-share boolean masking to protect against side-channel attacks such as DPA and CPA.
 
 ## 📂 More Information
 
-- 📘 [AES Core README](AES_README.md) – Details on modules, simulation, and synthesis.
-- 📘 [Masked S-box README](SBoxProtection_README.md) – Information on the protection technique, masking strategy, and attack model.
+- 📘 [AES_README.md](./AES_README.md) – Details on the AES module structure, simulation, and area analysis.
+- 📘 [SBoxProtection_README.md](./SBoxProtection_README.md) – Explanation of the masking technique, implementation details, and attack model.
 
 ---
