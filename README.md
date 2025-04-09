@@ -9,7 +9,7 @@ This project contains a hardware implementation of the AES encryption algorithm,
 
 ## 📂 More Information
 
-- 📘 [AES Core README](src/aes/README.md) – Details on modules, simulation, and synthesis.
-- 📘 [Masked S-box README](src/masked_sbox/README.md) – Information on the protection technique, masking strategy, and attack model.
+- 📘 [AES Core README](AES_README.md) – Details on modules, simulation, and synthesis.
+- 📘 [Masked S-box README](SBoxProtection_README.md) – Information on the protection technique, masking strategy, and attack model.
 
 ---
